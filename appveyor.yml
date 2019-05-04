@@ -19,3 +19,5 @@ install:
 
 test_script:
   - python build.py
+  - conan remote add inexor https://api.bintray.com/conan/inexorgame/inexor-conan --insert
+  - conan upload -r inexor

@@ -52,3 +52,5 @@ install:
 script:
   - chmod +x .ci/run.sh
   - ./.ci/run.sh
+  - conan remote add inexor https://api.bintray.com/conan/inexorgame/inexor-conan --insert
+  - conan upload -r inexor
