@@ -27,7 +27,7 @@ class v8Conan(ConanFile):
     _source_subfolder = "source_subfolder"
     _build_subfolder = "build_subfolder"
 
-    # build_requires = "depot_tools_installer/master@bincrafters/stable"
+    build_requires = "depot_tools_installer/master@bincrafters/stable"
 
     def system_requirements(self):
         # Install required OpenGL stuff on linux
@@ -43,10 +43,6 @@ class v8Conan(ConanFile):
         for package in packages:
             installer.install("{}{}".format(package, arch_suffix))
         """
-
-    def config_options(self):
-        if self.settings.os == 'Windows':
-            del self.options.fPIC
 
     def configure(self):
         """
