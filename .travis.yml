@@ -48,9 +48,9 @@ matrix:
 install:
   - chmod +x .ci/install.sh
   - ./.ci/install.sh
+  - conan remote add inexor https://api.bintray.com/conan/inexorgame/inexor-conan --insert
 
 script:
   - chmod +x .ci/run.sh
   - ./.ci/run.sh
-  - conan remote add inexor https://api.bintray.com/conan/inexorgame/inexor-conan --insert
-  - conan upload -r inexor
+
