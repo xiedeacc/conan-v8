@@ -27,55 +27,12 @@ class v8Conan(ConanFile):
     _source_subfolder = "source_subfolder"
     _build_subfolder = "build_subfolder"
 
-    build_requires = "depot_tools_installer/master@bincrafters/stable"
-
-    def system_requirements(self):
-        # Install required OpenGL stuff on linux
-        packages = []
-        """
-        if tools.os_info.is_linux:
-            if tools.os_info.with_apt:
-                installer = tools.SystemPackageTool()
-                packages.append("libgl1-mesa-dev")
-            else:
-                self.output.warn("Could not determine package manager, skipping Linux system requirements installation.")
-
-        for package in packages:
-            installer.install("{}{}".format(package, arch_suffix))
-        """
-
-    def configure(self):
-        """
-        self.options['corrade'].add_option('build_deprecated', self.options.build_deprecated)
-
-        # To fix issue with resource management, see here:
-        # https://github.com/mosra/magnum/issues/304#issuecomment-451768389
-        if self.options.shared:
-            self.options['corrade'].add_option('shared', True)
-        """
-
-    def build_requirements(self):
-        return
-        # tools.download(
-        '''
-        if tools.os_info.is_linux:
-            self.build_requires("bison/3.0.4@bincrafters/stable")
-            self.build_requires("bzip2/1.0.6@conan/testing")
-            self.build_requires("flex/2.6.4@bincrafters/stable")
-            self.build_requires("OpenSSL/1.1.0g@conan/stable")
-        '''
-
-    def requirements(self):
-        return
-
-        if tools.os_info.is_linux:
-            self.requires("libuuid/1.0.3@bincrafters/stable")
-            self.requires("OpenSSL/1.1.0g@conan/stable")
+    # build_requires = "depot_tools_installer/master@bincrafters/stable"
 
     def source(self):
         
         # Set up depot_tools
-        self.run("git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git")
+        self.run("git clone --depth 1 https://chromium.googlesource.com/chromium/tools/depot_tools.git")
         new_path = "PATH=$PATH:`pwd`/depot_tools "
         # new_path = ""
         self.run(new_path + "gclient")
