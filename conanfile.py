@@ -29,18 +29,66 @@ class v8Conan(ConanFile):
 
     build_requires = "depot_tools_installer/master@bincrafters/stable"
 
+    def system_requirements(self):
+        # Install required OpenGL stuff on linux
+        packages = []
+        """
+        if tools.os_info.is_linux:
+            if tools.os_info.with_apt:
+                installer = tools.SystemPackageTool()
+                packages.append("libgl1-mesa-dev")
+            else:
+                self.output.warn("Could not determine package manager, skipping Linux system requirements installation.")
+
+        for package in packages:
+            installer.install("{}{}".format(package, arch_suffix))
+        """
+
+    def configure(self):
+        """
+        self.options['corrade'].add_option('build_deprecated', self.options.build_deprecated)
+
+        # To fix issue with resource management, see here:
+        # https://github.com/mosra/magnum/issues/304#issuecomment-451768389
+        if self.options.shared:
+            self.options['corrade'].add_option('shared', True)
+        """
+
+    def build_requirements(self):
+        return
+        # tools.download(
+        '''
+        if tools.os_info.is_linux:
+            self.build_requires("bison/3.0.4@bincrafters/stable")
+            self.build_requires("bzip2/1.0.6@conan/testing")
+            self.build_requires("flex/2.6.4@bincrafters/stable")
+            self.build_requires("OpenSSL/1.1.0g@conan/stable")
+        '''
+
+    def requirements(self):
+        return
+
+        if tools.os_info.is_linux:
+            self.requires("libuuid/1.0.3@bincrafters/stable")
+            self.requires("OpenSSL/1.1.0g@conan/stable")
+
     def source(self):
+        
         # Set up depot_tools
-        self.run("gclient")
-        self.run("fetch v8")
+        self.run("git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git")
+        new_path = "PATH=$PATH:`pwd`/depot_tools "
+        # new_path = ""
+        self.run(new_path + "gclient")
+        self.run(new_path + "fetch v8")
+
 
     def build(self):
         new_path = "PATH=$PATH:`pwd`/depot_tools "
         # new_path = ""
         if tools.os_info.is_linux:
-            self.run("chmod +x v8/build/install-build-deps.sh")
-            self.run("v8/build/install-build-deps.sh --unsupported")
-        cmd = "cd v8 && tools/dev/v8gen.py x64.{build_type} -- v8_monolithic=true v8_static_library=true v8_use_external_startup_data=false is_component_build=false is_clang=false use_sysroot=false v8_enable_i18n_support=false v8_enable_backtrace=false use_glib=false use_custom_libcxx=false use_custom_libcxx_for_host = false treat_warnings_as_errors = false && ninja -C out.gn/x64.{build_type} v8_monolith".format(build_type=str(self.settings.build_type).lower())
+          self.run("chmod +x v8/build/install-build-deps.sh")
+          self.run(new_path + "v8/build/install-build-deps.sh --unsupported")
+        cmd = new_path + "cd v8 && tools/dev/v8gen.py x64.{build_type} -- v8_monolithic=true v8_static_library=true v8_use_external_startup_data=false is_component_build=false is_clang=false use_sysroot=false v8_enable_i18n_support=false v8_enable_backtrace=false use_glib=false use_custom_libcxx=false use_custom_libcxx_for_host = false treat_warnings_as_errors = false && ninja -C out.gn/x64.{build_type} v8_monolith".format(build_type=str(self.settings.build_type).lower())
         self.run(cmd)
 
     def package(self):
