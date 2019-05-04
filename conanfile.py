@@ -35,7 +35,7 @@ class v8Conan(ConanFile):
         self.run("git clone --depth 1 https://chromium.googlesource.com/chromium/tools/depot_tools.git")
         
         if tools.os_info.is_windows:
-            new_path = 'set "PATH=$PATH;%cd%/depot_tools" && '
+            new_path = 'set "PATH=%PATH%;%cd%/depot_tools" && '
         else:
             new_path = "PATH=$PATH:`pwd`/depot_tools "
         # new_path = ""
