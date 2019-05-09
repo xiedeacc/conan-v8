@@ -45,7 +45,7 @@ class v8Conan(ConanFile):
             os.environ["PATH"] += os.pathsep + os.path.join(self.source_folder, "depot_tools")
             self.run("chmod +x v8/build/install-build-deps.sh")
             self.run("v8/build/install-build-deps.sh --unsupported --no-arm --no-nacl "
-                     "--no-backwards-compatible"
+                     "--no-backwards-compatible --no-chromeos-fonts --no-prompt "
                      + "--syms" if str(self.settings.build_type) == "Debug" else "--no-syms")
 
         with tools.chdir("v8"):
@@ -67,8 +67,7 @@ class v8Conan(ConanFile):
                                 is_debug="true" if str(self.settings.build_type) == "Debug" else "false",
                                 arch="x64" if str(self.settings.arch) == "x86_64" else "x86")
             self.run(generator_cmd)
-            build_cmd = "ninja -C out.gn/{arch}.{build_type}".format(build_type=str(self.settings.build_type).lower(), arch="x64" if str(self.settings.arch) == "x86_64" else "x86")
-            self.run(build_cmd)
+            self.run("ninja -C out/foo")
 
     def package(self):
         self.copy(pattern="LICENSE*", dst="licenses", src="v8")
