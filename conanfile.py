@@ -8,7 +8,7 @@ import shutil
 
 class v8Conan(ConanFile):
     name = "v8"
-    version = "2019.01"
+    version = "7.6.66"
     description = "Javascript Engine"
     topics = ("javascript", "C++", "embedded", "google")
     url = "https://github.com/inexorgame/conan-v8"
@@ -27,30 +27,48 @@ class v8Conan(ConanFile):
     _source_subfolder = "source_subfolder"
     _build_subfolder = "build_subfolder"
 
-    # build_requires = "depot_tools_installer/master@bincrafters/stable"
+    build_requires = [# "depot_tools_installer/master@bincrafters/stable", # does not work, bc always outdated..
+                      "GN/master@inexorgame/testing",
+                      "ninja_installer/1.8.2@bincrafters/stable"]
 
     def source(self):
-        
-        # Set up depot_tools
         self.run("git clone --depth 1 https://chromium.googlesource.com/chromium/tools/depot_tools.git")
-        
-        if tools.os_info.is_windows:
-            new_path = 'set "PATH=%PATH%;%cd%/depot_tools" && '
-        else:
-            new_path = "PATH=$PATH:`pwd`/depot_tools "
-        # new_path = ""
-        self.run(new_path + "gclient")
-        self.run(new_path + "fetch v8")
+        os.environ["PATH"] += os.pathsep + os.path.join(self.source_folder, "depot_tools")
+        self.run("gclient")
+        self.run("fetch v8")
+        with tools.chdir("v8"):
+            self.run("git checkout {}".format(self.version))
 
 
     def build(self):
-        new_path = "PATH=$PATH:`pwd`/depot_tools "
-        # new_path = ""
         if tools.os_info.is_linux:
-          self.run("chmod +x v8/build/install-build-deps.sh")
-          self.run(new_path + "v8/build/install-build-deps.sh --unsupported")
-        cmd = new_path + "cd v8 && tools/dev/v8gen.py x64.{build_type} -- v8_monolithic=true v8_static_library=true v8_use_external_startup_data=false is_component_build=false is_clang=false use_sysroot=false v8_enable_i18n_support=false v8_enable_backtrace=false use_glib=false use_custom_libcxx=false use_custom_libcxx_for_host = false treat_warnings_as_errors = false && ninja -C out.gn/x64.{build_type} v8_monolith".format(build_type=str(self.settings.build_type).lower())
-        self.run(cmd)
+            os.environ["PATH"] += os.pathsep + os.path.join(self.source_folder, "depot_tools")
+            self.run("chmod +x v8/build/install-build-deps.sh")
+            self.run("v8/build/install-build-deps.sh --unsupported --no-arm --no-nacl "
+                     "--no-backwards-compatible"
+                     + "--syms" if str(self.settings.build_type) == "Debug" else "--no-syms")
+
+        with tools.chdir("v8"):
+            generator_cmd = "gn gen out/foo --args='v8_monolithic=true " \
+                            "v8_static_library=true " \
+                            "v8_use_external_startup_data=false " \
+                            "is_component_build=false " \
+                            "use_sysroot=false " \
+                            "v8_enable_i18n_support=false " \
+                            "v8_enable_backtrace=false " \
+                            "use_glib=false " \
+                            "use_custom_libcxx=false " \
+                            "use_custom_libcxx_for_host=false " \
+                            "treat_warnings_as_errors=false " \
+                            "is_clang={is_clang} " \
+                            "is_debug={is_debug} " \
+                            "target_cpu=\"{arch}\"'".format(
+                                is_clang="true" if "clang" in str(self.settings.compiler).lower() else "false",
+                                is_debug="true" if str(self.settings.build_type) == "Debug" else "false",
+                                arch="x64" if str(self.settings.arch) == "x86_64" else "x86")
+            self.run(generator_cmd)
+            build_cmd = "ninja -C out.gn/{arch}.{build_type}".format(build_type=str(self.settings.build_type).lower(), arch="x64" if str(self.settings.arch) == "x86_64" else "x86")
+            self.run(build_cmd)
 
     def package(self):
         self.copy(pattern="LICENSE*", dst="licenses", src="v8")
