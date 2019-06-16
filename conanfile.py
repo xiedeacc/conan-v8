@@ -33,8 +33,8 @@ class v8Conan(ConanFile):
                       # "GNGenerator/0.1@inexorgame/testing" (so dependencies get picked up)
     ]
 
-    def source(self):
-        self.run("git clone --depth 1 https://chromium.googlesource.com/chromium/tools/depot_tools.git")
+    def _set_environment_vars(self):
+        """set the environment variables, such that the google tooling is found (including the bundled python2)"""
         os.environ["PATH"] = os.path.join(self.source_folder, "depot_tools") + os.pathsep + os.environ["PATH"]
         os.environ["DEPOT_TOOLS_PATH"] = os.path.join(self.source_folder, "depot_tools")
         if tools.os_info.is_windows:
@@ -42,7 +42,11 @@ class v8Conan(ConanFile):
             if str(self.settings.compiler.version) not in ["15", "16"]:
                 raise ValueError("not yet supported visual studio version used for v8 build")
             os.environ["GYP_MSVS_VERSION"] = "2017" if str(self.settings.compiler.version) == "15" else "2019"
-
+        
+        
+    def source(self):
+        self.run("git clone --depth 1 https://chromium.googlesource.com/chromium/tools/depot_tools.git")
+        self._set_environment_vars()
         self.run("gclient")
         self.run("fetch v8")
         with tools.chdir("v8"):
@@ -64,12 +68,16 @@ class v8Conan(ConanFile):
                  + "--syms" if str(self.settings.build_type) == "Debug" else "--no-syms")
 
     def build(self):
+        self._set_environment_vars()
+
         if tools.os_info.is_linux:
             self._install_system_requirements_linux()
-            
+
         # fix gn always detecting the runtime on its own:
-        if str(self.settings.compiler) == "Visual Studio" and str(self.settings.compiler.runtime) in ["MD", "MDd"]:            
-            tools.replace_in_file(file_path=os.path.join("v8", "build", "config", "win", "BUILD.gn"), search="MT", replace="MD")
+        if str(self.settings.compiler) == "Visual Studio" and str(self.settings.compiler.runtime) in ["MD", "MDd"]:
+            build_gn_file = os.path.join("v8", "build", "config", "win", "BUILD.gn")
+            print("replacing MT / MTd with MD / MDd in gn file." + build_gn_file)
+            tools.replace_in_file(file_path=build_gn_file, search="MT", replace="MD")
 
         with tools.chdir("v8"):
             arguments = ["v8_monolithic = true",
@@ -92,6 +100,7 @@ class v8Conan(ConanFile):
             if tools.os_info.is_windows:
                 # this is picking up the python shipped via depot_tools, since we got it in the path.
                 generator_call = "python " + generator_call
+            self.run("python --version")
             self.run(generator_call)
             self.run("ninja -C out.gn/{profile} v8_monolith".format(profile=self.get_gn_profile(self.settings)))
 
