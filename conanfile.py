@@ -35,7 +35,7 @@ class v8Conan(ConanFile):
 
     def source(self):
         self.run("git clone --depth 1 https://chromium.googlesource.com/chromium/tools/depot_tools.git")
-        os.environ["PATH"] += os.pathsep + os.path.join(self.source_folder, "depot_tools")
+        os.environ["PATH"] = os.path.join(self.source_folder, "depot_tools") + os.pathsep + os.environ["PATH"]
         os.environ["DEPOT_TOOLS_PATH"] = os.path.join(self.source_folder, "depot_tools")
         if tools.os_info.is_windows:
             os.environ["DEPOT_TOOLS_WIN_TOOLCHAIN"] = "0"
