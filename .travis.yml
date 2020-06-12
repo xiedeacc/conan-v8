@@ -30,7 +30,7 @@ matrix:
 install:
   - chmod +x .ci/install.sh
   - ./.ci/install.sh
-  - conan remote add inexor https://api.bintray.com/conan/inexorgame/inexor-conan --insert
+  - conan remote add altairwei https://api.bintray.com/conan/altairwei/conan --insert
 
 script:
   - chmod +x .ci/run.sh
