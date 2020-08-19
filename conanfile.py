@@ -3,12 +3,14 @@
 
 from conans import ConanFile, CMake, tools
 import os
+import sys
 import shutil
+import subprocess
 
 
 class v8Conan(ConanFile):
     name = "v8"
-    version = "7.6.66"
+    version = "7.9.335"
     description = "Javascript Engine"
     topics = ("javascript", "C++", "embedded", "google")
     url = "https://github.com/inexorgame/conan-v8"
@@ -62,10 +64,11 @@ class v8Conan(ConanFile):
     def _install_system_requirements_linux(self):
         """some extra script must be executed on linux"""
         os.environ["PATH"] += os.pathsep + os.path.join(self.source_folder, "depot_tools")
-        self.run("chmod +x v8/build/install-build-deps.sh")
-        self.run("v8/build/install-build-deps.sh --unsupported --no-arm --no-nacl "
-                 "--no-backwards-compatible --no-chromeos-fonts --no-prompt "
-                 + "--syms" if str(self.settings.build_type) == "Debug" else "--no-syms")
+        sh_script = self.source_folder + "/v8/build/install-build-deps.sh"
+        self.run("chmod +x " + sh_script)
+        cmd = sh_script + " --unsupported --no-arm --no-nacl --no-backwards-compatible --no-chromeos-fonts --no-prompt "
+        cmd = cmd + ("--syms" if str(self.settings.build_type) == "Debug" else "--no-syms")
+        self.run(cmd)
 
     def build(self):
         self._set_environment_vars()
@@ -79,30 +82,40 @@ class v8Conan(ConanFile):
             print("replacing MT / MTd with MD / MDd in gn file." + build_gn_file)
             tools.replace_in_file(file_path=build_gn_file, search="MT", replace="MD")
 
-        with tools.chdir("v8"):
-            arguments = ["v8_monolithic = true",
-                         "is_component_build = false",
-                         "v8_static_library = true",
-                         "treat_warnings_as_errors = false",
-                         "v8_use_external_startup_data = false"]
+        v8_source_root = os.path.join(self.source_folder, "v8")
+        with tools.chdir(v8_source_root):
+            self.run("gclient sync")
+            # Refer to v8/infra/mb/mb_config.pyl
+            gen_arguments = [
+                "is_debug=" + ("true" if str(self.settings.build_type) == "Debug" else "false"),
+                "target_cpu=" + ('"x64"' if str(self.settings.arch) == "x86_64" else '"x86"'),
+                "is_component_build=false",
+                "v8_monolithic = true",
+                "is_chrome_branded=false",
+                "v8_static_library=true",
+                "treat_warnings_as_errors=false",
+                "v8_use_external_startup_data=false"
+            ]
             # v8_enable_backtrace=false, v8_enable_i18n_support
 
             if tools.os_info.is_linux:
-                arguments += ["use_sysroot = false",
-                              "use_custom_libcxx = false",
-                              "use_custom_libcxx_for_host = false",
-                              "use_glib = false",
-                              "is_clang = " + "true" if "clang" in str(self.settings.compiler).lower() else "false"]
+                gen_arguments += [
+                    "use_sysroot=false",
+                    "use_custom_libcxx=false",
+                    "use_custom_libcxx_for_host=false",
+                    "use_glib=false",
+                    "is_clang=" + ("true" if "clang" in str(self.settings.compiler).lower() else "false")
+                ]
 
-            generator_call = 'tools/dev/v8gen.py {profile} -- "{gn_args}"'.format(profile=self.get_gn_profile(self.settings),
-                                                                                gn_args=" ".join(arguments))
+            generator_call = "gn gen {folder} --args='{gn_args}'".format(folder=self.build_folder, gn_args=" ".join(gen_arguments))
+
             # maybe todo: absolute path..
             if tools.os_info.is_windows:
                 # this is picking up the python shipped via depot_tools, since we got it in the path.
                 generator_call = "python " + generator_call
             self.run("python --version")
             self.run(generator_call)
-            self.run("ninja -C out.gn/{profile} v8_monolith".format(profile=self.get_gn_profile(self.settings)))
+            self.run("ninja -C {folder} v8_monolith".format(folder=self.build_folder))
 
 
     def package(self):
@@ -110,7 +123,7 @@ class v8Conan(ConanFile):
         self.copy(pattern="*v8_monolith.a", dst="lib", keep_path=False)
         self.copy(pattern="*v8_monolith.lib", dst="lib", keep_path=False)
         self.copy(pattern="*.h", dst="include", src="v8/include", keep_path=True)
-        
+
 
     def package_info(self):
         # fix issue on Windows and OSx not finding the KHR files
