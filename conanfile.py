@@ -16,12 +16,8 @@ class v8Conan(ConanFile):
     url = "https://github.com/inexorgame/conan-v8"
     homepage = "https://v8.dev"
     author = "a_teammate <madoe3@web.de>"
-    license = "MIT"  # Indicates license type of the packaged library; please use SPDX Identifiers https://spdx.org/licenses/
-    # exports = ["COPYING"]
-    # exports_sources = ["BUILD.gn", "DEPS", "*", "!.git/*"]
-    # exports_sources = ["CMakeLists.txt", "src/*", "!src/*/*/Test", "package/conan/*", "modules/*"]
-    generators = "cmake" # "GNGenerator"
-    # short_paths = True  # Some folders go out of the 260 chars path length scope (windows)
+    license = "MIT"
+    generators = "cmake"
 
     settings = "os", "arch", "compiler", "build_type"
     
@@ -35,6 +31,53 @@ class v8Conan(ConanFile):
                       # "GNGenerator/0.1@inexorgame/testing" (so dependencies get picked up)
     ]
 
+    def build_requirements(self):
+        if not tools.which("ninja"):
+            self.build_requires("ninja/1.10.0")
+        # python >= 2.7.5 & < 3
+        def _check_python_version():
+            # Check if a valid python2 is available in PATH or it will failflex
+            # Start by checking if python2 can be found
+            python_exe = tools.which("python2")
+            if not python_exe:
+                # Fall back on regular python
+                python_exe = tools.which("python")
+
+            if not python_exe:
+                msg = ("Python2 must be available in PATH "
+                        "in order to build Qt WebEngine")
+                raise ConanInvalidConfiguration(msg)
+            # In any case, check its actual version for compatibility
+            from six import StringIO  # Python 2 and 3 compatible
+            mybuf = StringIO()
+            cmd_v = "{} --version".format(python_exe)
+            self.run(cmd_v, output=mybuf)
+            verstr = mybuf.getvalue().strip().split('Python ')[1]
+            if verstr.endswith('+'):
+                verstr = verstr[:-1]
+            version = tools.Version(verstr)
+            # >= 2.7.5 & < 3
+            v_min = "2.7.5"
+            v_max = "3.0.0"
+            if (version >= v_min) and (version < v_max):
+                msg = ("Found valid Python 2 required for v8:"
+                        " version={}, path={}".format(mybuf.getvalue(), python_exe))
+                self.output.success(msg)
+            else:
+                msg = ("Found Python 2 in path, but with invalid version {}"
+                        " (v8 requires >= {} & < "
+                        "{})".format(verstr, v_min, v_max))
+                raise ConanInvalidConfiguration(msg)
+
+        try:
+            _check_python_version()
+        except ConanInvalidConfiguration as e:
+            if tools.os_info.is_windows:
+                raise e
+            self.output.info("Python 2 not detected in path. Trying to install it")
+            tools.SystemPackageTool().install(["python2", "python"])
+            _check_python_version()
+
     def _set_environment_vars(self):
         """set the environment variables, such that the google tooling is found (including the bundled python2)"""
         os.environ["PATH"] = os.path.join(self.source_folder, "depot_tools") + os.pathsep + os.environ["PATH"]
@@ -44,8 +87,8 @@ class v8Conan(ConanFile):
             if str(self.settings.compiler.version) not in ["15", "16"]:
                 raise ValueError("not yet supported visual studio version used for v8 build")
             os.environ["GYP_MSVS_VERSION"] = "2017" if str(self.settings.compiler.version) == "15" else "2019"
-        
-        
+
+
     def source(self):
         self.run("git clone --depth 1 https://chromium.googlesource.com/chromium/tools/depot_tools.git")
         self._set_environment_vars()
