@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from conans import ConanFile, CMake, tools
 import os
 import sys
 import shutil
 import subprocess
 
+from conans import ConanFile, CMake, tools
+from conans.errors import ConanInvalidConfiguration
 
 class v8Conan(ConanFile):
     name = "v8"
