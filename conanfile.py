@@ -42,7 +42,9 @@ class v8Conan(ConanFile):
                 self.build_requires("gperf/3.1")
             if not tools.which("flex"):
                 self.build_requires("flex/2.6.4")
-        if tools.os_info.is_linux: 
+        if tools.os_info.is_linux:
+            os.environ["DEBIAN_FRONTEND"] = "noninteractive"
+            tools.SystemPackageTool().install("tzdata")
             if not tools.which("lsb-release"):
                 tools.SystemPackageTool().install("lsb-release")
         # python >= 2.7.5 & < 3
