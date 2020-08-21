@@ -32,21 +32,14 @@ class v8Conan(ConanFile):
                       # "GNGenerator/0.1@inexorgame/testing" (so dependencies get picked up)
     ]
 
-    def build_requirements(self):
-        if not tools.which("ninja"):
-            self.build_requires("ninja/1.10.0")
-        if self.settings.os != "Windows":
-            if not tools.which("bison"):
-                self.build_requires("bison/3.5.3")
-            if not tools.which("gperf"):
-                self.build_requires("gperf/3.1")
-            if not tools.which("flex"):
-                self.build_requires("flex/2.6.4")
+    def system_requirements(self):
         if tools.os_info.is_linux:
+            # Install tzdata without user input
             os.environ["DEBIAN_FRONTEND"] = "noninteractive"
             self.run("ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime")
-            self.run("dpkg-reconfigure --frontend noninteractive tzdata")
             tools.SystemPackageTool().install("tzdata")
+            self.run("dpkg-reconfigure --frontend noninteractive tzdata")
+
             if not tools.which("lsb-release"):
                 tools.SystemPackageTool().install("lsb-release")
         # python >= 2.7.5 & < 3
@@ -92,6 +85,17 @@ class v8Conan(ConanFile):
             self.output.info("Python 2 not detected in path. Trying to install it")
             tools.SystemPackageTool().install(["python2", "python"])
             _check_python_version()
+
+    def build_requirements(self):
+        if not tools.which("ninja"):
+            self.build_requires("ninja/1.10.0")
+        if self.settings.os != "Windows":
+            if not tools.which("bison"):
+                self.build_requires("bison/3.5.3")
+            if not tools.which("gperf"):
+                self.build_requires("gperf/3.1")
+            if not tools.which("flex"):
+                self.build_requires("flex/2.6.4")
 
     def _set_environment_vars(self):
         """set the environment variables, such that the google tooling is found (including the bundled python2)"""
