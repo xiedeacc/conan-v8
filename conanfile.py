@@ -84,6 +84,7 @@ class v8Conan(ConanFile):
 
     def _set_environment_vars(self):
         """set the environment variables, such that the google tooling is found (including the bundled python2)"""
+        os.environ["DEBIAN_FRONTEND"] = "noninteractive"
         os.environ["PATH"] = os.path.join(self.source_folder, "depot_tools") + os.pathsep + os.environ["PATH"]
         os.environ["DEPOT_TOOLS_PATH"] = os.path.join(self.source_folder, "depot_tools")
         if tools.os_info.is_windows:
