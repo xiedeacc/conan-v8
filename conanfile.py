@@ -21,6 +21,7 @@ class v8Conan(ConanFile):
     generators = "cmake"
 
     settings = "os", "arch", "compiler", "build_type"
+    short_paths = True
     
 
     _source_subfolder = "source_subfolder"
