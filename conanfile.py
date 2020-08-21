@@ -84,7 +84,6 @@ class v8Conan(ConanFile):
 
     def _set_environment_vars(self):
         """set the environment variables, such that the google tooling is found (including the bundled python2)"""
-        os.environ["DEBIAN_FRONTEND"] = "noninteractive"
         os.environ["PATH"] = os.path.join(self.source_folder, "depot_tools") + os.pathsep + os.environ["PATH"]
         os.environ["DEPOT_TOOLS_PATH"] = os.path.join(self.source_folder, "depot_tools")
         if tools.os_info.is_windows:
@@ -112,6 +111,7 @@ class v8Conan(ConanFile):
     def _install_system_requirements_linux(self):
         """some extra script must be executed on linux"""
         os.environ["PATH"] += os.pathsep + os.path.join(self.source_folder, "depot_tools")
+        os.environ["DEBIAN_FRONTEND"] = "noninteractive"
         sh_script = self.source_folder + "/v8/build/install-build-deps.sh"
         self.run("chmod +x " + sh_script)
         cmd = sh_script + " --unsupported --no-arm --no-nacl --no-backwards-compatible --no-chromeos-fonts --no-prompt "
