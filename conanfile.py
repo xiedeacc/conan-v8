@@ -115,7 +115,7 @@ class v8Conan(ConanFile):
         self.run("chmod +x " + sh_script)
         cmd = sh_script + " --unsupported --no-arm --no-nacl --no-backwards-compatible --no-chromeos-fonts --no-prompt "
         cmd = cmd + ("--syms" if str(self.settings.build_type) == "Debug" else "--no-syms")
-        cmd += "export DEBIAN_FRONTEND=noninteractive && "
+        cmd = "export DEBIAN_FRONTEND=noninteractive && " + cmd
         self.run(cmd)
 
     def build(self):
