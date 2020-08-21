@@ -34,12 +34,13 @@ class v8Conan(ConanFile):
 
     def system_requirements(self):
         if tools.os_info.is_linux:
-            # Install tzdata without user input
-            os.environ["DEBIAN_FRONTEND"] = "noninteractive"
-            self.run("sudo ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime")
-            tools.SystemPackageTool().install("tzdata")
-            self.run("sudo dpkg-reconfigure --frontend noninteractive tzdata")
-
+            if not tools.SystemPackageTool().installed("tzdata"):
+                if os_info.linux_distro == "ubuntu":
+                    # Install tzdata without user input
+                    os.environ["DEBIAN_FRONTEND"] = "noninteractive"
+                    self.run("sudo ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime")
+                    tools.SystemPackageTool().install("tzdata")
+                    self.run("sudo dpkg-reconfigure --frontend noninteractive tzdata")
             if not tools.which("lsb-release"):
                 tools.SystemPackageTool().install("lsb-release")
         # python >= 2.7.5 & < 3
@@ -80,8 +81,8 @@ class v8Conan(ConanFile):
         try:
             _check_python_version()
         except ConanInvalidConfiguration as e:
-            if tools.os_info.is_windows:
-                raise e
+            #if tools.os_info.is_windows:
+            #    raise e
             self.output.info("Python 2 not detected in path. Trying to install it")
             tools.SystemPackageTool().install(["python2", "python"])
             _check_python_version()
