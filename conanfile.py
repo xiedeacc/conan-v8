@@ -44,6 +44,8 @@ class v8Conan(ConanFile):
                 self.build_requires("flex/2.6.4")
         if tools.os_info.is_linux:
             os.environ["DEBIAN_FRONTEND"] = "noninteractive"
+            self.run("ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime")
+            self.run("dpkg-reconfigure --frontend noninteractive tzdata")
             tools.SystemPackageTool().install("tzdata")
             if not tools.which("lsb-release"):
                 tools.SystemPackageTool().install("lsb-release")
