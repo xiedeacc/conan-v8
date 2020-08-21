@@ -35,6 +35,13 @@ class v8Conan(ConanFile):
     def build_requirements(self):
         if not tools.which("ninja"):
             self.build_requires("ninja/1.10.0")
+        if self.settings.os != "Windows":
+            if not tools.which("bison"):
+                self.build_requires("bison/3.5.3")
+            if not tools.which("gperf"):
+                self.build_requires("gperf/3.1")
+            if not tools.which("flex"):
+                self.build_requires("flex/2.6.4")
         if tools.os_info.is_linux: 
             if not tools.which("lsb-release"):
                 tools.SystemPackageTool().install("lsb-release")
