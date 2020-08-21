@@ -154,27 +154,31 @@ class v8Conan(ConanFile):
             self.run("gclient sync")
             # Refer to v8/infra/mb/mb_config.pyl
             gen_arguments = [
-                "is_debug=" + ("true" if str(self.settings.build_type) == "Debug" else "false"),
-                "target_cpu=" + ('"x64"' if str(self.settings.arch) == "x86_64" else '"x86"'),
-                "is_component_build=false",
+                "is_debug = " + ("true" if str(self.settings.build_type) == "Debug" else "false"),
+                "target_cpu = " + ('"x64"' if str(self.settings.arch) == "x86_64" else '"x86"'),
+                "is_component_build = false",
                 "v8_monolithic = true",
-                "is_chrome_branded=false",
-                "v8_static_library=true",
-                "treat_warnings_as_errors=false",
-                "v8_use_external_startup_data=false"
+                "is_chrome_branded = false",
+                "v8_static_library = true",
+                "treat_warnings_as_errors = false",
+                "v8_use_external_startup_data = false"
             ]
             # v8_enable_backtrace=false, v8_enable_i18n_support
 
             if tools.os_info.is_linux:
                 gen_arguments += [
-                    "use_sysroot=false",
-                    "use_custom_libcxx=false",
-                    "use_custom_libcxx_for_host=false",
-                    "use_glib=false",
-                    "is_clang=" + ("true" if "clang" in str(self.settings.compiler).lower() else "false")
+                    "use_sysroot = false",
+                    "use_custom_libcxx = false",
+                    "use_custom_libcxx_for_host = false",
+                    "use_glib = false",
+                    "is_clang = " + ("true" if "clang" in str(self.settings.compiler).lower() else "false")
                 ]
 
-            generator_call = "gn gen {folder} --args='{gn_args}'".format(folder=self.build_folder, gn_args=" ".join(gen_arguments))
+            args_gn_file = os.path.join(self.build_folder, "args.gn")
+            with open(args_gn_file, "w") as f:
+                f.write("\n".join(gen_arguments))
+
+            generator_call = "gn gen {folder}".format(folder=self.build_folder)
 
             # maybe todo: absolute path..
             #if tools.os_info.is_windows:
