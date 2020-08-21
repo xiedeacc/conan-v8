@@ -49,7 +49,7 @@ class v8Conan(ConanFile):
 
             if not python_exe:
                 msg = ("Python2 must be available in PATH "
-                        "in order to build Qt WebEngine")
+                        "in order to build v8")
                 raise ConanInvalidConfiguration(msg)
             # In any case, check its actual version for compatibility
             from six import StringIO  # Python 2 and 3 compatible
@@ -111,11 +111,11 @@ class v8Conan(ConanFile):
     def _install_system_requirements_linux(self):
         """some extra script must be executed on linux"""
         os.environ["PATH"] += os.pathsep + os.path.join(self.source_folder, "depot_tools")
-        os.environ["DEBIAN_FRONTEND"] = "noninteractive"
         sh_script = self.source_folder + "/v8/build/install-build-deps.sh"
         self.run("chmod +x " + sh_script)
         cmd = sh_script + " --unsupported --no-arm --no-nacl --no-backwards-compatible --no-chromeos-fonts --no-prompt "
         cmd = cmd + ("--syms" if str(self.settings.build_type) == "Debug" else "--no-syms")
+        cmd += "export DEBIAN_FRONTEND=noninteractive && "
         self.run(cmd)
 
     def build(self):
