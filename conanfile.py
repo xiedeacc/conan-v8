@@ -35,6 +35,9 @@ class v8Conan(ConanFile):
     def build_requirements(self):
         if not tools.which("ninja"):
             self.build_requires("ninja/1.10.0")
+        if tools.os_info.is_linux: 
+            if not tools.which("lsb_release"):
+                tools.SystemPackageTool().install("lsb_release")
         # python >= 2.7.5 & < 3
         def _check_python_version():
             # Check if a valid python2 is available in PATH or it will failflex
