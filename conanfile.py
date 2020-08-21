@@ -136,18 +136,20 @@ class v8Conan(ConanFile):
         self.run(cmd)
 
     def build(self):
+        v8_source_root = os.path.join(self.source_folder, "v8")
         self._set_environment_vars()
+        
 
         if tools.os_info.is_linux:
             self._install_system_requirements_linux()
 
         # fix gn always detecting the runtime on its own:
         if str(self.settings.compiler) == "Visual Studio" and str(self.settings.compiler.runtime) in ["MD", "MDd"]:
-            build_gn_file = os.path.join("v8", "build", "config", "win", "BUILD.gn")
+            build_gn_file = os.path.join(v8_source_root, "build", "config", "win", "BUILD.gn")
             print("replacing MT / MTd with MD / MDd in gn file." + build_gn_file)
-            tools.replace_in_file(file_path=build_gn_file, search="MT", replace="MD")
+            #tools.replace_in_file(file_path=build_gn_file, search="MT", replace="MD", strict=False)
 
-        v8_source_root = os.path.join(self.source_folder, "v8")
+
         with tools.chdir(v8_source_root):
             self.run("gclient sync")
             # Refer to v8/infra/mb/mb_config.pyl
@@ -175,10 +177,11 @@ class v8Conan(ConanFile):
             generator_call = "gn gen {folder} --args='{gn_args}'".format(folder=self.build_folder, gn_args=" ".join(gen_arguments))
 
             # maybe todo: absolute path..
-            if tools.os_info.is_windows:
+            #if tools.os_info.is_windows:
                 # this is picking up the python shipped via depot_tools, since we got it in the path.
-                generator_call = "python " + generator_call
+            #    generator_call = "python " + generator_call
             self.run("python --version")
+            print(generator_call)
             self.run(generator_call)
             self.run("ninja -C {folder} v8_monolith".format(folder=self.build_folder))
 
