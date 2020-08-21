@@ -35,7 +35,7 @@ class v8Conan(ConanFile):
     def system_requirements(self):
         if tools.os_info.is_linux:
             if not tools.SystemPackageTool().installed("tzdata"):
-                if os_info.linux_distro == "ubuntu":
+                if tools.os_info.linux_distro == "ubuntu":
                     # Install tzdata without user input
                     os.environ["DEBIAN_FRONTEND"] = "noninteractive"
                     self.run("sudo ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime")
