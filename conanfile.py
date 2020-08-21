@@ -36,9 +36,9 @@ class v8Conan(ConanFile):
         if tools.os_info.is_linux:
             # Install tzdata without user input
             os.environ["DEBIAN_FRONTEND"] = "noninteractive"
-            self.run("ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime")
+            self.run("sudo ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime")
             tools.SystemPackageTool().install("tzdata")
-            self.run("dpkg-reconfigure --frontend noninteractive tzdata")
+            self.run("sudo dpkg-reconfigure --frontend noninteractive tzdata")
 
             if not tools.which("lsb-release"):
                 tools.SystemPackageTool().install("lsb-release")
