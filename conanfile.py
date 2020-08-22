@@ -11,7 +11,7 @@ from conans.errors import ConanInvalidConfiguration
 
 class v8Conan(ConanFile):
     name = "v8"
-    version = "7.9.335"
+    version = "8.7.3"
     description = "Javascript Engine"
     topics = ("javascript", "C++", "embedded", "google")
     url = "https://github.com/inexorgame/conan-v8"
@@ -88,8 +88,8 @@ class v8Conan(ConanFile):
             tools.SystemPackageTool().install(["python2", "python"])
             _check_python_version()
         
-        if tools.os_info.is_windows:
-            self.run("python -m pip install pywin32")
+        #if tools.os_info.is_windows:
+        #    self.run("python -m pip install pywin32")
 
     def build_requirements(self):
         if not tools.which("ninja"):
