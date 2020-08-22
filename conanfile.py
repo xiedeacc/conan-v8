@@ -11,7 +11,7 @@ from conans.errors import ConanInvalidConfiguration
 
 class v8Conan(ConanFile):
     name = "v8"
-    version = "8.7.3"
+    version = "8.1.310"
     description = "Javascript Engine"
     topics = ("javascript", "C++", "embedded", "google")
     url = "https://github.com/inexorgame/conan-v8"
