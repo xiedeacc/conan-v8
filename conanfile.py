@@ -87,6 +87,9 @@ class v8Conan(ConanFile):
             self.output.info("Python 2 not detected in path. Trying to install it")
             tools.SystemPackageTool().install(["python2", "python"])
             _check_python_version()
+        
+        if tools.os_info.is_windows:
+            self.run("python -m pip install pywin32")
 
     def build_requirements(self):
         if not tools.which("ninja"):
