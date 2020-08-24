@@ -22,3 +22,4 @@ pip install conan --upgrade
 pip install conan_package_tools bincrafters_package_tools
 
 conan user
+conan remote add altairwei https://api.bintray.com/conan/altairwei/conan --insert
