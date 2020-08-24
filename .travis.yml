@@ -52,7 +52,6 @@ matrix:
 install:
   - chmod +x .ci/install.sh
   - ./.ci/install.sh
-  - conan remote add altairwei https://api.bintray.com/conan/altairwei/conan --insert
 
 script:
   - chmod +x .ci/run.sh
